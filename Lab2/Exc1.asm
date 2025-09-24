@@ -40,13 +40,13 @@ main:
  
 	jal  PROC_NOME	#chama a função para nomear o arquivo
 	
-	la	$s2, D		#carregando o endereço de inicio de D em s2
-	li	$t5, 0		#contador de iterações
-	li	$t6, 9		#carregando 9 em t9
+	la	$s2, D				#carregando o endereço de inicio de D em s2
+	li	$t5, 0				#contador de iterações
+	li	$t6, 9				#carregando 9 em t9
 	la	$s0, ascii_buffer	#salvar o endereço do buffer em s0
-	la	$s1, buffer_temp		#salva o endereco do buffer temporario/auxiliar
-	li 	$t8, 0		#contador de bytes do buffer principal
-	li	$t7, 0		#contador de bytes do buffer temporario
+	la	$s1, buffer_temp	#salva o endereco do buffer temporario/auxiliar
+	li 	$t8, 0				#contador de bytes do buffer principal
+	li	$t7, 0				#contador de bytes do buffer temporario
 		
 	matriz_loop:
 		beq	$t5, $t6, buffer_done	#checando se já percorremos toda a matriz
