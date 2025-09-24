@@ -1,3 +1,6 @@
+#Objetivo do programa: dada as matrizes A e B, calcular A*B^t e disponibilizar essa matriz em um arquivo .txt cujo nome é escolhido pelo usuário
+#Projeto em dupla com Ana Julia Botega
+
 .data
 A: .word 1, 2, 3,
           0, 1, 4,
@@ -35,7 +38,7 @@ main:
     	jal  PROC_MUL	    # Chama PROC_MUL(A, B, D)
     	
  
-	jal  PROC_NOME
+	jal  PROC_NOME	#chama a função para nomear o arquivo
 	
 	la	$s2, D		#carregando o endereço de inicio de D em s2
 	li	$t5, 0		#contador de iterações
@@ -152,14 +155,10 @@ main:
     		li   $v0, 10
     		syscall
 
+# -------------------------------------------------------
+# PROC_MUL(A, B, D, n)
+# -------------------------------------------------------
 PROC_MUL:
-    # Entrada:
-    # $a0 = A
-    # $a1 = B
-    # $a2 = D
-    # $a3 = n
-
-    # Salva registradores usados
     addi $sp, $sp, -12
     sw   $ra, 8($sp)
     sw   $s0, 4($sp)
@@ -191,8 +190,9 @@ for_j:
 
     li   $t6, 0     # acumulador soma
     li   $t8, 0     # k
+    li   $t8, 0     # k
 for_k:
-    beq  $t8, $t3, fim_k
+    beq  $t8, $t3, fim_k   # se k == n, sai do loop
 
     # A[i][k]
     mul  $t9, $t4, $t3
@@ -200,123 +200,164 @@ for_k:
     sll  $t9, $t9, 2
     add  $t9, $t1, $t9
     lw   $s2, 0($t9)
-    
 
-    # C[j][k]
-    mul  $t9, $t5, $t3
-    add  $t9, $t9, $t8
+    # C[k][j]
+    mul  $t9, $t8, $t3
+    add  $t9, $t9, $t5
     sll  $t9, $t9, 2
     add  $t9, $t0, $t9
     lw   $s3, 0($t9)
 
-    mul  $s2, $s2, $s3
-    add  $t6, $t6, $s2
+    # soma parcial
+    mul  $t9, $s2, $s3
+    add  $t6, $t6, $t9
 
     addi $t8, $t8, 1
     j for_k
+
 fim_k:
 
-	
-    	# D[i][j] = soma
-    	mul  $t9, $t4, $t3
-    	add  $t9, $t9, $t5
-    	sll  $t9, $t9, 2
-    	add  $t9, $t2, $t9
-    	sw   $t6, 0($t9)
+    # D[i][j] = soma
+    mul  $t9, $t4, $t3
+    add  $t9, $t9, $t5
+    sll  $t9, $t9, 2
+    add  $t9, $t2, $t9
+    sw   $t6, 0($t9)
 
-    	addi $t5, $t5, 1
+    addi $t5, $t5, 1
     j for_j
 fim_j:
     addi $t4, $t4, 1
     j for_i
 fim_mul:
 
-    # Restaura pilha
     lw   $ra, 8($sp)
     lw   $s0, 4($sp)
     lw   $s1, 0($sp)
     addi $sp, $sp, 12
     jr   $ra
 
+# -------------------------------------------------------
+# PROC_TRANS(B, C, n)
+# -------------------------------------------------------
 PROC_TRANS:
-    # Entrada:
-    # $a0 = B
-    # $a1 = C
-    # $a2 = n
-    li   $t0, 0        		# i, começa com zero
-
-
+    li   $t0, 0        # i
 loop_i:
-    beq  $t0, $a2, end_trans 	# if (linha atual == tamanho da matriz (?)) jump to end_trans (chegamos ao final da matriz)
-    li   $t1, 0        		# else: t1 <= 0
-    
+    beq  $t0, $a2, end_trans
+    li   $t1, 0        # j
 loop_j:
-    beq  $t1, $a2, end_j	#if (t1 == tamanho da matriz) jump to end_j (fim da coluna)
+    beq  $t1, $a2, end_j
 
     # B[i][j]
-    mul  $t2, $t0, $a2		
-    add  $t2, $t2, $t1		
-    sll  $t2, $t2, 2		
-    add  $t2, $a0, $t2		#t2 = (linha atual * tamanho da matriz + coluna atual) *4 + endereço de B
-    lw   $t3, 0($t2)		#salva em t3 o endereço do próximo elemento de B
+    mul  $t2, $t0, $a2
+    add  $t2, $t2, $t1
+    sll  $t2, $t2, 2
+    add  $t2, $a0, $t2
+    lw   $t3, 0($t2)
 
     # C[j][i] = B[i][j]
-    mul  $t2, $t1, $a2		#t2 = coluna * tamanho da matriz
-    add  $t2, $t2, $t0		#t2 = t2 + linha atual
-    sll  $t2, $t2, 2		#t2 = t2 * 4
-    add  $t2, $a1, $t2		#t2 = endereco de B + t2
-    sw   $t3, 0($t2)		#salva em t2 (endereco de C) o valor de t3(o valor do elemento correspondente de B )
+    mul  $t2, $t1, $a2
+    add  $t2, $t2, $t0
+    sll  $t2, $t2, 2
+    add  $t2, $a1, $t2
+    sw   $t3, 0($t2)
 
-    addi $t1, $t1, 1		#t1 = t1 + 1
-    j loop_j			#repete o procedimento
-
+    addi $t1, $t1, 1
+    j loop_j
 end_j:
     addi $t0, $t0, 1
     j loop_i
-
 end_trans:
     jr $ra
-    
-PROC_NOME:
-    # Leitura do nome do arquivo (sem extensão)
-    li   $v0, 8            # syscall 8 = read string
-    la   $a0, filename     # endereço de destino
-    li   $a1, 28           # espaço disponível (deixa espaço para ".txt\0")
+
+# -------------------------------------------------------
+# PRINT_MAT(mat, n)
+# -------------------------------------------------------
+PRINT_MAT:
+    move $t0, $a0   # base da matriz
+    move $t1, $a1   # n
+    li   $t2, 0     # i
+
+print_i:
+    beq  $t2, $t1, fim_print
+
+    li   $t3, 0     # j
+print_j:
+    beq  $t3, $t1, fim_print_j
+
+    mul  $t4, $t2, $t1
+    add  $t4, $t4, $t3
+    sll  $t4, $t4, 2
+    add  $t4, $t0, $t4
+    lw   $t5, 0($t4)
+
+    # print int
+    move $a0, $t5
+    li   $v0, 1
     syscall
 
-    # Remover o '\n' (newline) se estiver presente
-    la   $t0, filename     # ponteiro para o buffer do nome
+    # print space
+    li   $a0, 32
+    li   $v0, 11
+    syscall
+
+    addi $t3, $t3, 1
+    j print_j
+fim_print_j:
+    # print newline
+    li   $a0, 10
+    li   $v0, 11
+    syscall
+
+    addi $t2, $t2, 1
+    j print_i
+fim_print:
+    jr $ra
+ 
+ 
+#----------------------------------------
+#PROC_NOME
+#----------------------------------------
+PROC_NOME:
+    	# Leitura do nome do arquivo 
+	li   $v0, 8            # syscall 8 = read string
+    	la   $a0, filename     # endereço de destino
+    	li   $a1, 28           # deixar espaço para a extensão ".txt"
+    	syscall
+
+    	# Remover o '\n' (newline) se estiver presente
+	la   $t0, filename     # ponteiro para o buffer do nome
 remover_enter:
-    lb   $t1, 0($t0)
-    beq  $t1, 10, substituir_zero   # se for '\n', substitui por \0
-    beq  $t1, 0, fim_remover        # se já for \0, fim
-    addi $t0, $t0, 1
-    j    remover_enter
+    	lb   $t1, 0($t0)
+    	beq  $t1, 10, substituir_zero   # se for '\n', substitui pelo caractere do fim
+    	beq  $t1, 0, fim_remover        # se já for o caractere do fim, acaba
+    	addi $t0, $t0, 1
+    	j    remover_enter		#repetir o loop, ir pro prox caractere
 
 substituir_zero:
-    li   $t1, 0
-    sb   $t1, 0($t0)
-    j    fim_remover
+    	li   $t1, 0
+    	sb   $t1, 0($t0)
+    	j    fim_remover
 
 fim_remover:
 
-    # Adiciona a extensão ".txt"
-    la   $t0, filename         # ponteiro para início do nome
-achar_fim:
-    lb   $t1, 0($t0)
-    beq  $t1, 0, pronto_para_anexar
-    addi $t0, $t0, 1
-    j    achar_fim
+    	# Adiciona a extensão ".txt"
+    	la   $t0, filename         # ponteiro para início do nome
+	achar_fim:
+    		lb   $t1, 0($t0)
+    		beq  $t1, 0, pronto_para_anexar
+    		addi $t0, $t0, 1
+    		j    achar_fim
 
-pronto_para_anexar:
-    la   $t2, extensao         # ponteiro para ".txt"
-copiar_extensao:
-    lb   $t3, 0($t2)
-    sb   $t3, 0($t0)
-    beq  $t3, 0, fim_copia_extensao
-    addi $t0, $t0, 1
-    addi $t2, $t2, 1
-    j    copiar_extensao
+	pronto_para_anexar:
+    		la   $t2, extensao         # ponteiro para ".txt"
+	copiar_extensao:
+    		lb   $t3, 0($t2)
+    		sb   $t3, 0($t0)
+    		beq  $t3, 0, fim_copia_extensao
+   		addi $t0, $t0, 1
+    		addi $t2, $t2, 1
+    		j    copiar_extensao
 
 fim_copia_extensao:
     jr   $ra
