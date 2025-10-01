@@ -19,9 +19,12 @@ main:
 	la		$a0, msg1		# carregando um ponteiro para o endereço doq queremos escrever
 	syscall
 	
-	li		$v0, 6			# comando 7: read double
+	li		$v0, 6			# comando 6: read double
     syscall
-    mov.d  	$f4, $f0		# movendo para o reg f4 o valor inserido pelo usuário
+    
+	li		$v0, 3			# comando 2:escrever double
+	syscall
+
 	
 	
 	#---------------------------------------------#
@@ -34,35 +37,59 @@ main:
 	
 	li		$v0, 5			# comando 5: read int
     syscall
-    move 	$t0, $v0		#movendo para o reg t0 o valor inserido pelo usuário	
+    move 	$a0, $v0		#movendo para o reg a0 o valor inserido pelo usuário (p/ passar como parâmetro)	
     	
     
     
     l.d  	$f6, numeroUm	#salvando o número 1 no reg f6 (valor inicial da estimativa)
-    l.s 	$f14, numeroDois
-    li		$t1, 0			#inicializando o contador de iterações
+    l.d 	$f14, numeroDois
+    li		$a1, 0			#inicializando o contador de iterações como parâmetro
+    
+	sqrt.d $f16, $f0
+    
     
 	jal		raiz_quadrada	#chama a função raiz quadrada
 	
-	mov.d 	$f12, $f6
-	li		$v0, 2			# comando 2:escrever float
+
+	
+	mov.d 	$f12, $f0		#movedo para f12 o valor de retorno da função
+	li		$v0, 3			# comando 2:escrever double
+	syscall
+	
+	li		$v0, 4			# comando 4:escrever sting
+	la		$a0, espaco		# carregando um ponteiro para o endereço doq queremos escrever
+	syscall
+	
+	mov.d 	$f12, $f16
+	li		$v0, 3			# comando 2:escrever double
 	syscall
 	 
 	li		$v0, 10
 	syscall
 	 
 	 #------------------------------------------------------------#
-	 # Função calcula raiz quadrada através do método de newton
+	 # Função calcula raiz quadrada através do método de newton 
 	 #------------------------------------------------------------#
 	 
 	 raiz_quadrada:
-	 	div.d  	$f8, $f4, $f6		# x/estimativa
+	 	div.d  	$f8, $f0, $f6		# x/estimativa
 	 	add.d 	$f10, $f8, $f6		# somando o resultado da linha anterior com a estimativa
 	 	div.d  	$f12, $f10, $f14	# divindo por dois		
 	 	
 	 	mov.d 	$f6, $f12			# movendo p reg da estimativa o novo valor da estimativa
 	 	
-	 	addi	$t1, $t1, 1				#adicionando um ao contador de iterações
-	 	bne		$t1, $t0, raiz_quadrada	#if (numero de iterações != n inserido pelo usuario) then repete procedimento
+	 	addi	$a1, $a1, 1				#adicionando um ao contador de iterações
+	 	bne		$a1, $a0, raiz_quadrada	#if (numero de iterações != n inserido pelo usuario) then repete procedimento
+	 	
+	 	mov.d	$f0, $f6				#movendo pro reg de retorno de double o valor da estimativa
 	 	
 	 	jr	$ra
+
+	 	
+	 	
+	
+	
+	
+	
+	
+	
