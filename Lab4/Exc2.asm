@@ -88,9 +88,7 @@
     	
     	lw 		$t6, 0($a2)		#carregando em t6 o valor do endereço do array
 		beq 	$t6, $t3, achamos
-    	
-    	beq		$a2, $t3, achamos	#se acharmos o número :) break 
-    	
+        	
     	addi	$a2, $a2, 4		#indo pro prox item do array
     	addi	$t5, $t5, 1		#i++
     	bne		$t5, $t0, loop_procurar	# caso (i != tamanho do array) repete o loop
